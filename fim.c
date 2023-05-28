@@ -1,4 +1,7 @@
 /** includes **/
+#define _GNU_SOURCE
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
 #include <unistd.h>
 #include <termios.h>
 #include <stdlib.h>
@@ -39,11 +42,12 @@ typedef struct erow{
 
 struct Editor_Config{
   int cx,cy;
+  int rowoff;
   int Screen_Rows;
   int Screen_Cols;
   struct termios orig_termios;
   int num_rows;
-  erow row;
+  erow *row;
 };
  
 struct Editor_Config E;
@@ -187,19 +191,42 @@ int Get_Window_Size(int *rows, int *cols)
   } 
 }
 
+/** row operation **/ 
+#define row_section 1 
+
+void Editor_Append_Row(char *s, size_t len) {
+  E.row = realloc(E.row, sizeof(erow)*(E.num_rows+1));
+  int at=E.num_rows;
+  E.row[at].size = len;
+  E.row[at].chars = malloc(len + 1);
+  memcpy(E.row[at].chars, s, len);
+  E.row[at].chars[len] = '\0';
+  E.num_rows ++;
+}
 
 /** file i/0 **/ 
 #define file_section 1 
 
 
-void Editor_Open() {
-  char *line = "Hello, world!";
-  ssize_t linelen = 13;
-  E.row.size = linelen;
-  E.row.chars = malloc(linelen + 1);
-  memcpy(E.row.chars, line, linelen);
-  E.row.chars[linelen] = '\0';
-  E.num_rows = 1;
+void Editor_Open(char *filename) {
+  // File from stdio.h 
+  FILE *fp = fopen(filename,"r");
+  if(!fp) End("Fail to open");
+  char *line = NULL;
+  size_t linecap=0;
+  ssize_t linelen ;
+  int totlen=0;
+  while((linelen=getline(&line,&linecap,fp))!=-1)
+  {
+    totlen++;
+  while(linelen>0 && (line[linelen-1]=='\n'||line[linelen-1]=='\r')){
+    linelen--;
+    Editor_Append_Row(line,linelen);
+  }
+  }
+  //printf("%d\n",totlen);
+  free(line);
+  fclose(fp);
 }
 
 /** append buffer **/ 
@@ -230,15 +257,25 @@ void ab_Free(struct abuf *ab){
 
 /** output **/
 
+void Editor_Scroll() {
+  if (E.cy < E.rowoff) {
+    E.rowoff = E.cy;
+  }
+  if (E.cy >= E.rowoff + E.Screen_Rows) {
+    E.rowoff = E.cy - E.Screen_Rows + 1;
+  }
+}
+
 void Editor_Draw_Rows(struct abuf *ab)
 {
   // Draw '~'
   int y;
   for(y=0; y<E.Screen_Rows; y++)
   {
-    if(y>=E.num_rows)
+    int filerow = y+E.rowoff;
+    if(filerow>=E.num_rows)
     {
-    if(y==E.Screen_Rows/3)
+    if(E.num_rows==0 && y==E.Screen_Rows/3)
     {
       char welcome[80];
       //snprintf will write string to specific buffer
@@ -255,13 +292,14 @@ void Editor_Draw_Rows(struct abuf *ab)
     }
     else  ab_Append(ab,"~", 1);}
     else{
-      int len=E.row.size;
+      int len=E.row[filerow].size;
       if(len>E.Screen_Cols) len=E.Screen_Cols;
-      ab_Append(ab,E.row.chars,len);
+      ab_Append(ab,E.row[filerow].chars,len);
     }
     // \1n[K to refresh this row.
     ab_Append(ab,"\x1b[K",3);
-    if(y<E.Screen_Rows-1){
+    if(y<E.Screen_Rows-1)
+    {
       // The last row error
       ab_Append(ab,"\r\n", 2);
     }
@@ -270,6 +308,7 @@ void Editor_Draw_Rows(struct abuf *ab)
 
 void Editor_Refresh_Screen()
 {
+  Editor_Scroll();
   // Here define the abuf
   struct abuf ab = ABUF_INIT;
   // Write will write sth to terminal.
@@ -312,7 +351,9 @@ void Editor_Move_Cursor(int key) {
       }
       break;
     case ARROW_DOWN:
-      if (E.cy != E.Screen_Rows - 1) {
+      // Here cause a bug!!!!
+      // cy<=Screen_Rows make the content wrong :(
+      if (E.cy <= E.num_rows - 1) {
         E.cy++;
       }
       break;
@@ -357,14 +398,19 @@ void Init_Editor(){
   E.cx = 0;
   E.cy = 0;
   E.num_rows=0;
+  E.rowoff=0;
+  E.row = NULL;
   if(Get_Window_Size(&E.Screen_Rows, &E.Screen_Cols)==-1) End("Fail to get windowssize!");
 }
 
-int main()
+int main(int argc, char *argv[])
 {
   Enable_Raw_Mode();
   Init_Editor();
-  Editor_Open();  
+  if(argc>=2)
+  {
+    Editor_Open(argv[1]);
+  }
   // Read from STDIN_FILENO for 1 byte.
   while (1)
   {

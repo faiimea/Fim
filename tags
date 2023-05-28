@@ -19,9 +19,11 @@ DEL_KEY	fim.c	/^  DEL_KEY , $/;"	e	enum:editorKey	file:	access:public
 Disable_Raw_Mode	fim.c	/^void Disable_Raw_Mode()$/;"	f	typeref:typename:void	signature:()
 E	fim.c	/^struct Editor_Config E;$/;"	v	typeref:struct:Editor_Config
 END_KEY	fim.c	/^  END_KEY  , $/;"	e	enum:editorKey	file:	access:public
+Editor_Append_Row	fim.c	/^void Editor_Append_Row(char *s, size_t len) {$/;"	f	typeref:typename:void	signature:(char * s,size_t len)
 Editor_Config	fim.c	/^struct Editor_Config{$/;"	s	file:
 Editor_Draw_Rows	fim.c	/^void Editor_Draw_Rows(struct abuf *ab)$/;"	f	typeref:typename:void	signature:(struct abuf * ab)
 Editor_Move_Cursor	fim.c	/^void Editor_Move_Cursor(int key) {$/;"	f	typeref:typename:void	signature:(int key)
+Editor_Open	fim.c	/^void Editor_Open(char *filename) {$/;"	f	typeref:typename:void	signature:(char * filename)
 Editor_Process_Keypress	fim.c	/^void Editor_Process_Keypress()$/;"	f	typeref:typename:void	signature:()
 Editor_Read_Key	fim.c	/^int Editor_Read_Key()$/;"	f	typeref:typename:int	signature:()
 Editor_Refresh_Screen	fim.c	/^void Editor_Refresh_Screen()$/;"	f	typeref:typename:void	signature:()
@@ -37,6 +39,9 @@ PAGE_DOWN	fim.c	/^  PAGE_DOWN , $/;"	e	enum:editorKey	file:	access:public
 PAGE_UP	fim.c	/^  PAGE_UP , $/;"	e	enum:editorKey	file:	access:public
 Screen_Cols	fim.c	/^  int Screen_Cols;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
 Screen_Rows	fim.c	/^  int Screen_Rows;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
+_BSD_SOURCE	fim.c	/^#define _BSD_SOURCE$/;"	d	file:
+_DEFAULT_SOURCE	fim.c	/^#define _DEFAULT_SOURCE$/;"	d	file:
+_GNU_SOURCE	fim.c	/^#define _GNU_SOURCE$/;"	d	file:
 ab_Append	fim.c	/^void ab_Append(struct abuf *ab, const char *s, int len){$/;"	f	typeref:typename:void	signature:(struct abuf * ab,const char * s,int len)
 ab_Free	fim.c	/^void ab_Free(struct abuf *ab){$/;"	f	typeref:typename:void	signature:(struct abuf * ab)
 abuf	fim.c	/^struct abuf{$/;"	s	file:
@@ -50,14 +55,16 @@ define_section	fim.c	/^#define define_section /;"	d	file:
 editorKey	fim.c	/^enum editorKey {$/;"	g	file:
 erow	fim.c	/^typedef struct erow{$/;"	s	file:
 erow	fim.c	/^} erow;$/;"	t	typeref:struct:erow	file:
+file_section	fim.c	/^#define file_section /;"	d	file:
 fim	Makefile	/^fim: fim.c $/;"	t
 fim	README.md	/^# fim$/;"	c
 init_section	fim.c	/^#define init_section /;"	d	file:
 input_section	fim.c	/^#define input_section /;"	d	file:
 len	fim.c	/^  int len;$/;"	m	struct:abuf	typeref:typename:int	file:	access:public
-main	fim.c	/^int main()$/;"	f	typeref:typename:int	signature:()
+main	fim.c	/^int main(int argc, char *argv[])$/;"	f	typeref:typename:int	signature:(int argc,char * argv[])
 num_rows	fim.c	/^  int num_rows;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
 orig_termios	fim.c	/^  struct termios orig_termios;$/;"	m	struct:Editor_Config	typeref:struct:termios	file:	access:public
-row	fim.c	/^  erow row;$/;"	m	struct:Editor_Config	typeref:typename:erow	file:	access:public
+row	fim.c	/^  erow *row;$/;"	m	struct:Editor_Config	typeref:typename:erow *	file:	access:public
+row_section	fim.c	/^#define row_section /;"	d	file:
 size	fim.c	/^  int size;$/;"	m	struct:erow	typeref:typename:int	file:	access:public
 terminal_section	fim.c	/^#define terminal_section /;"	d	file:
