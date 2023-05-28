@@ -6,10 +6,12 @@
 #include <stdio.h>
 #include <errno.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
 #include <string.h>
 
 /** define **/ 
 
+#define define_section 1
 #define FIM_VERSION "0.01"
 // Ctrl+letter -> ASMII 1-26
 // ox1f -> 00011111 (quit 3 bit of input)
@@ -28,16 +30,26 @@ enum editorKey {
 };
 
 /** data **/
+
+#define data_section 1 
+typedef struct erow{
+  int size;
+  char *chars;
+} erow;
+
 struct Editor_Config{
   int cx,cy;
   int Screen_Rows;
   int Screen_Cols;
   struct termios orig_termios;
+  int num_rows;
+  erow row;
 };
  
 struct Editor_Config E;
 
 /** terminal **/ 
+#define terminal_section 1 
 
 //print error message
 void End(const char *s)
@@ -175,8 +187,23 @@ int Get_Window_Size(int *rows, int *cols)
   } 
 }
 
-/** append buffer **/ 
 
+/** file i/0 **/ 
+#define file_section 1 
+
+
+void Editor_Open() {
+  char *line = "Hello, world!";
+  ssize_t linelen = 13;
+  E.row.size = linelen;
+  E.row.chars = malloc(linelen + 1);
+  memcpy(E.row.chars, line, linelen);
+  E.row.chars[linelen] = '\0';
+  E.num_rows = 1;
+}
+
+/** append buffer **/ 
+#define buf_section 1 
 // construct the dynamic string in c:
 // use buffer to batch processing instead of tons of 'write'~
 
@@ -209,6 +236,8 @@ void Editor_Draw_Rows(struct abuf *ab)
   int y;
   for(y=0; y<E.Screen_Rows; y++)
   {
+    if(y>=E.num_rows)
+    {
     if(y==E.Screen_Rows/3)
     {
       char welcome[80];
@@ -224,7 +253,12 @@ void Editor_Draw_Rows(struct abuf *ab)
       while(padding--) ab_Append(ab," ",1);
       ab_Append(ab,welcome,Welcome_len);
     }
-    else  ab_Append(ab,"~", 1);
+    else  ab_Append(ab,"~", 1);}
+    else{
+      int len=E.row.size;
+      if(len>E.Screen_Cols) len=E.Screen_Cols;
+      ab_Append(ab,E.row.chars,len);
+    }
     // \1n[K to refresh this row.
     ab_Append(ab,"\x1b[K",3);
     if(y<E.Screen_Rows-1){
@@ -236,6 +270,7 @@ void Editor_Draw_Rows(struct abuf *ab)
 
 void Editor_Refresh_Screen()
 {
+  // Here define the abuf
   struct abuf ab = ABUF_INIT;
   // Write will write sth to terminal.
   // \x1b change meaning of sequence, and [ will ask the terminal to perform the task
@@ -258,7 +293,7 @@ void Editor_Refresh_Screen()
 }
 
 /** input **/ 
-
+#define input_section 1
 void Editor_Move_Cursor(int key) {
   switch (key) {
     case ARROW_LEFT:
@@ -317,17 +352,19 @@ void Editor_Process_Keypress()
 }
 
 /** init **/
-
+#define init_section 1 
 void Init_Editor(){
   E.cx = 0;
   E.cy = 0;
+  E.num_rows=0;
   if(Get_Window_Size(&E.Screen_Rows, &E.Screen_Cols)==-1) End("Fail to get windowssize!");
 }
 
 int main()
 {
-    Enable_Raw_Mode();
-    Init_Editor();
+  Enable_Raw_Mode();
+  Init_Editor();
+  Editor_Open();  
   // Read from STDIN_FILENO for 1 byte.
   while (1)
   {

@@ -9,22 +9,55 @@
 !_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
 !_TAG_PROGRAM_VERSION	5.9.0	//
+ABUF_INIT	fim.c	/^#define ABUF_INIT /;"	d	file:
+ARROW_DOWN	fim.c	/^  ARROW_DOWN , $/;"	e	enum:editorKey	file:	access:public
+ARROW_LEFT	fim.c	/^  ARROW_LEFT = 1000,$/;"	e	enum:editorKey	file:	access:public
+ARROW_RIGHT	fim.c	/^  ARROW_RIGHT ,$/;"	e	enum:editorKey	file:	access:public
+ARROW_UP	fim.c	/^  ARROW_UP ,$/;"	e	enum:editorKey	file:	access:public
 CTRL_KEY	fim.c	/^#define CTRL_KEY(/;"	d	file:	signature:(k)
+DEL_KEY	fim.c	/^  DEL_KEY , $/;"	e	enum:editorKey	file:	access:public
 Disable_Raw_Mode	fim.c	/^void Disable_Raw_Mode()$/;"	f	typeref:typename:void	signature:()
 E	fim.c	/^struct Editor_Config E;$/;"	v	typeref:struct:Editor_Config
+END_KEY	fim.c	/^  END_KEY  , $/;"	e	enum:editorKey	file:	access:public
 Editor_Config	fim.c	/^struct Editor_Config{$/;"	s	file:
-Editor_Draw_Rows	fim.c	/^void Editor_Draw_Rows()$/;"	f	typeref:typename:void	signature:()
+Editor_Draw_Rows	fim.c	/^void Editor_Draw_Rows(struct abuf *ab)$/;"	f	typeref:typename:void	signature:(struct abuf * ab)
+Editor_Move_Cursor	fim.c	/^void Editor_Move_Cursor(int key) {$/;"	f	typeref:typename:void	signature:(int key)
 Editor_Process_Keypress	fim.c	/^void Editor_Process_Keypress()$/;"	f	typeref:typename:void	signature:()
-Editor_Read_Key	fim.c	/^char Editor_Read_Key()$/;"	f	typeref:typename:char	signature:()
+Editor_Read_Key	fim.c	/^int Editor_Read_Key()$/;"	f	typeref:typename:int	signature:()
 Editor_Refresh_Screen	fim.c	/^void Editor_Refresh_Screen()$/;"	f	typeref:typename:void	signature:()
 Enable_Raw_Mode	fim.c	/^void Enable_Raw_Mode()$/;"	f	typeref:typename:void	signature:()
 End	fim.c	/^void End(const char *s)$/;"	f	typeref:typename:void	signature:(const char * s)
+FIM_VERSION	fim.c	/^#define FIM_VERSION /;"	d	file:
 Fix_Raw_Mode	fim.c	/^void Fix_Raw_Mode()$/;"	f	typeref:typename:void	signature:()
+Get_Cursor_Position	fim.c	/^int Get_Cursor_Position(int *rows, int *cols)$/;"	f	typeref:typename:int	signature:(int * rows,int * cols)
 Get_Window_Size	fim.c	/^int Get_Window_Size(int *rows, int *cols)$/;"	f	typeref:typename:int	signature:(int * rows,int * cols)
+HOME_KEY	fim.c	/^  HOME_KEY , $/;"	e	enum:editorKey	file:	access:public
 Init_Editor	fim.c	/^void Init_Editor(){$/;"	f	typeref:typename:void	signature:()
+PAGE_DOWN	fim.c	/^  PAGE_DOWN , $/;"	e	enum:editorKey	file:	access:public
+PAGE_UP	fim.c	/^  PAGE_UP , $/;"	e	enum:editorKey	file:	access:public
 Screen_Cols	fim.c	/^  int Screen_Cols;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
 Screen_Rows	fim.c	/^  int Screen_Rows;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
+ab_Append	fim.c	/^void ab_Append(struct abuf *ab, const char *s, int len){$/;"	f	typeref:typename:void	signature:(struct abuf * ab,const char * s,int len)
+ab_Free	fim.c	/^void ab_Free(struct abuf *ab){$/;"	f	typeref:typename:void	signature:(struct abuf * ab)
+abuf	fim.c	/^struct abuf{$/;"	s	file:
+b	fim.c	/^  char *b;$/;"	m	struct:abuf	typeref:typename:char *	file:	access:public
+buf_section	fim.c	/^#define buf_section /;"	d	file:
+chars	fim.c	/^  char *chars;$/;"	m	struct:erow	typeref:typename:char *	file:	access:public
+cx	fim.c	/^  int cx,cy;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
+cy	fim.c	/^  int cx,cy;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
+data_section	fim.c	/^#define data_section /;"	d	file:
+define_section	fim.c	/^#define define_section /;"	d	file:
+editorKey	fim.c	/^enum editorKey {$/;"	g	file:
+erow	fim.c	/^typedef struct erow{$/;"	s	file:
+erow	fim.c	/^} erow;$/;"	t	typeref:struct:erow	file:
 fim	Makefile	/^fim: fim.c $/;"	t
 fim	README.md	/^# fim$/;"	c
+init_section	fim.c	/^#define init_section /;"	d	file:
+input_section	fim.c	/^#define input_section /;"	d	file:
+len	fim.c	/^  int len;$/;"	m	struct:abuf	typeref:typename:int	file:	access:public
 main	fim.c	/^int main()$/;"	f	typeref:typename:int	signature:()
+num_rows	fim.c	/^  int num_rows;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
 orig_termios	fim.c	/^  struct termios orig_termios;$/;"	m	struct:Editor_Config	typeref:struct:termios	file:	access:public
+row	fim.c	/^  erow row;$/;"	m	struct:Editor_Config	typeref:typename:erow	file:	access:public
+size	fim.c	/^  int size;$/;"	m	struct:erow	typeref:typename:int	file:	access:public
+terminal_section	fim.c	/^#define terminal_section /;"	d	file:
