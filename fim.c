@@ -11,11 +11,14 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <string.h>
+#include <time.h>
+#include <stdarg.h>
 
 /** define **/ 
 
 #define define_section 1
-#define FIM_VERSION "0.01"
+#define FIM_VERSION "0.02"
+#define FIM_TAB_STOP 8
 // Ctrl+letter -> ASMII 1-26
 // ox1f -> 00011111 (quit 3 bit of input)
 // eg: 0100 0001 is A , 0110 0001 is a 
@@ -37,17 +40,26 @@ enum editorKey {
 #define data_section 1 
 typedef struct erow{
   int size;
+  int rsize;
   char *chars;
+  // Render stands for real char in screen.
+  char *render;
 } erow;
 
 struct Editor_Config{
   int cx,cy;
+  int rx;
   int rowoff;
+  int coloff;
   int Screen_Rows;
   int Screen_Cols;
   struct termios orig_termios;
   int num_rows;
   erow *row;
+  char* File_Name;
+  char status_msg[64];
+  //time_t from <time.h>
+  time_t status_msg_time;
 };
  
 struct Editor_Config E;
@@ -192,7 +204,39 @@ int Get_Window_Size(int *rows, int *cols)
 }
 
 /** row operation **/ 
-#define row_section 1 
+#define row_section 1
+
+int Editor_Row_CxToRx(erow *row, int cx) {
+  int rx = 0;
+  int j;
+  for (j = 0; j < cx; j++) {
+    if (row->chars[j] == '\t')
+      rx += (FIM_TAB_STOP - 1) - (rx % FIM_TAB_STOP);
+    rx++;
+  }
+  return rx;
+}
+
+void Editor_Update_Row(erow *row) {
+  // Deal with unshown char.
+  int tabs = 0;
+  int j;
+  for (j = 0; j < row->size; j++)
+    if (row->chars[j] == '\t') tabs++;
+  free(row->render);
+  row->render = malloc(row->size + tabs*(FIM_TAB_STOP-1) + 1);
+  int idx = 0;
+  for (j = 0; j < row->size; j++) {
+    if (row->chars[j] == '\t') {
+      row->render[idx++] = ' ';
+      while (idx % FIM_TAB_STOP != 0) row->render[idx++] = ' ';
+    } else {
+      row->render[idx++] = row->chars[j];
+    }
+  }
+  row->render[idx] = '\0';
+  row->rsize = idx;
+}
 
 void Editor_Append_Row(char *s, size_t len) {
   E.row = realloc(E.row, sizeof(erow)*(E.num_rows+1));
@@ -202,6 +246,9 @@ void Editor_Append_Row(char *s, size_t len) {
   memcpy(E.row[at].chars, s, len);
   E.row[at].chars[len] = '\0';
   E.num_rows ++;
+  E.row[at].rsize=0;
+  E.row[at].render=NULL;
+  Editor_Update_Row(&E.row[at]);
 }
 
 /** file i/0 **/ 
@@ -210,6 +257,9 @@ void Editor_Append_Row(char *s, size_t len) {
 
 void Editor_Open(char *filename) {
   // File from stdio.h 
+  free(E.File_Name);
+  // strdup will copy string to new memory;
+  E.File_Name = strdup(filename);
   FILE *fp = fopen(filename,"r");
   if(!fp) End("Fail to open");
   char *line = NULL;
@@ -256,26 +306,41 @@ void ab_Free(struct abuf *ab){
 }
 
 /** output **/
+#define output_section 1
 
 void Editor_Scroll() {
+  // Determine the terminal by cursor
+  E.rx = E.cx ;
+  if (E.cy < E.rowoff) {
+    E.rx = Editor_Row_CxToRx(&E.row[E.cy],E.cx);
+  }
+
   if (E.cy < E.rowoff) {
     E.rowoff = E.cy;
   }
   if (E.cy >= E.rowoff + E.Screen_Rows) {
     E.rowoff = E.cy - E.Screen_Rows + 1;
   }
+  if (E.rx < E.coloff){
+    E.coloff = E.cx;
+  }
+  if(E.rx >= E.coloff + E.Screen_Cols){
+    E.coloff = E.rx - E.Screen_Cols +1;
+  }
 }
 
 void Editor_Draw_Rows(struct abuf *ab)
 {
-  // Draw '~'
+  // Draw
   int y;
   for(y=0; y<E.Screen_Rows; y++)
   {
+    // rowoff means the row which terminal starts
     int filerow = y+E.rowoff;
     if(filerow>=E.num_rows)
     {
-    if(E.num_rows==0 && y==E.Screen_Rows/3)
+    // with no file content.
+      if(E.num_rows==0 && y==E.Screen_Rows/3)
     {
       char welcome[80];
       //snprintf will write string to specific buffer
@@ -290,21 +355,59 @@ void Editor_Draw_Rows(struct abuf *ab)
       while(padding--) ab_Append(ab," ",1);
       ab_Append(ab,welcome,Welcome_len);
     }
-    else  ab_Append(ab,"~", 1);}
-    else{
-      int len=E.row[filerow].size;
+      else  ab_Append(ab,"~", 1);}
+    else
+    {
+      // with file content.
+      // coloff is started col of this row.
+      int len=E.row[filerow].rsize - E.coloff;
+      if(len < 0) len=0;
       if(len>E.Screen_Cols) len=E.Screen_Cols;
-      ab_Append(ab,E.row[filerow].chars,len);
+      ab_Append(ab,&E.row[filerow].render[E.coloff],len);
     }
     // \1n[K to refresh this row.
     ab_Append(ab,"\x1b[K",3);
-    if(y<E.Screen_Rows-1)
-    {
+    
       // The last row error
       ab_Append(ab,"\r\n", 2);
-    }
+    
   }
 }
+
+void Editor_Draw_Status_Bar(struct abuf *ab) {
+  // [7m will use reversal color
+  ab_Append(ab, "\x1b[7m", 4);
+  char status[64],rstatus[64];
+  int len = snprintf(status,sizeof(status),"%.20s - %d lines", E.File_Name ? E.File_Name : "[NEW_FILE]",E.num_rows);
+  int rlen = snprintf(rstatus, sizeof(rstatus),"%d/%d",E.cy+1,E.num_rows);
+
+  if(len > E.Screen_Cols) len=E.Screen_Cols;
+  ab_Append(ab,status,len);
+  while (len < E.Screen_Cols) {
+    if(E.Screen_Cols - len == rlen)
+    {
+      ab_Append(ab,rstatus,rlen);
+      break;
+    }
+    else{
+    ab_Append(ab, " ", 1);
+    len++;
+    }
+  }
+  // return color
+  ab_Append(ab, "\x1b[m", 3);
+  ab_Append(ab, "\r\n",2);
+}
+
+void Editor_Draw_Message_Bar(struct abuf *ab) {
+  // Print msg 
+  ab_Append(ab, "\x1b[K", 3);
+  int msglen = strlen(E.status_msg);
+  if (msglen > E.Screen_Cols) msglen = E.Screen_Cols;
+  if (msglen && time(NULL) - E.status_msg_time < 5)
+    ab_Append(ab, E.status_msg, msglen);
+}
+
 
 void Editor_Refresh_Screen()
 {
@@ -320,8 +423,11 @@ void Editor_Refresh_Screen()
   // Clean terminal will change the location of cursor. So H will relocate cursor to upper left.
   ab_Append(&ab,"\x1b[H",3);
   Editor_Draw_Rows(&ab);
+  Editor_Draw_Status_Bar(&ab);
+  Editor_Draw_Message_Bar(&ab);
   char buf[32];
-  snprintf(buf,sizeof(buf),"\x1b[%d;%dH",E.cy+1,E.cx+1);
+  // Which draw the location of cursor
+  snprintf(buf,sizeof(buf),"\x1b[%d;%dH",E.cy-E.rowoff+1,E.rx-E.coloff+1);
   ab_Append(&ab,buf,strlen(buf));
   // 25h to show the cursor
   ab_Append(&ab,"\x1b[?25h",6);
@@ -331,19 +437,45 @@ void Editor_Refresh_Screen()
   ab_Free(&ab);
 }
 
-/** input **/ 
+void Editor_Set_Status_Message(const char *fmt, ...) {
+  // Make num of var varies.
+  // Let's recall Computer programming practice...
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(E.status_msg, sizeof(E.status_msg), fmt, ap);
+  va_end(ap);
+  E.status_msg_time = time(NULL);
+}
+
+/** input **/
+
 #define input_section 1
+
+
+// Editor_Move_Cursor will change cursor location with key.
 void Editor_Move_Cursor(int key) {
+  erow *row = (E.cy >= E.num_rows) ? NULL : &E.row[E.cy];
   switch (key) {
     case ARROW_LEFT:
       if (E.cx != 0) {
         E.cx--;
       }
+      else if(E.cy>0)
+      {
+        E.cy--;
+        E.cx=E.row[E.cy].size;
+    }
       break;
     case ARROW_RIGHT:
-      if (E.cx != E.Screen_Cols - 1) {
-        E.cx++;
-      }
+      // limit of cursor
+      if(row && E.cx < row->size)
+      {E.cx++;}
+      else if(row && E.cx == row->size)
+      {
+        E.cy++;
+        E.cx=0;
+      // my vim doesn't have this part...
+    }
       break;
     case ARROW_UP:
       if (E.cy != 0) {
@@ -358,6 +490,11 @@ void Editor_Move_Cursor(int key) {
       }
       break;
   }
+  row = (E.cy >= E.num_rows) ? NULL : &E.row[E.cy];
+  int rowlen = row ? row->size : 0;
+  if (E.cx > rowlen) {
+    E.cx = rowlen;
+  } 
 }
 
 void Editor_Process_Keypress()
@@ -393,14 +530,21 @@ void Editor_Process_Keypress()
 }
 
 /** init **/
+
+
 #define init_section 1 
 void Init_Editor(){
   E.cx = 0;
   E.cy = 0;
+  E.cy = 0;
   E.num_rows=0;
   E.rowoff=0;
+  E.coloff=0;
   E.row = NULL;
   if(Get_Window_Size(&E.Screen_Rows, &E.Screen_Cols)==-1) End("Fail to get windowssize!");
+  // Init the screen size with status row;
+  E.Screen_Rows -=2;
+  E.File_Name = NULL;
 }
 
 int main(int argc, char *argv[])
@@ -412,10 +556,13 @@ int main(int argc, char *argv[])
     Editor_Open(argv[1]);
   }
   // Read from STDIN_FILENO for 1 byte.
+
+  Editor_Set_Status_Message("HELP:");
   while (1)
   {
     Editor_Refresh_Screen();
     Editor_Process_Keypress();
   }
+// see more in https://github.com/snaptoken/kilo-src/commits/master
   return 0;
 }

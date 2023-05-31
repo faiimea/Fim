@@ -22,14 +22,20 @@ END_KEY	fim.c	/^  END_KEY  , $/;"	e	enum:editorKey	file:	access:public
 Editor_Append_Row	fim.c	/^void Editor_Append_Row(char *s, size_t len) {$/;"	f	typeref:typename:void	signature:(char * s,size_t len)
 Editor_Config	fim.c	/^struct Editor_Config{$/;"	s	file:
 Editor_Draw_Rows	fim.c	/^void Editor_Draw_Rows(struct abuf *ab)$/;"	f	typeref:typename:void	signature:(struct abuf * ab)
+Editor_Draw_Status_Bar	fim.c	/^void Editor_Draw_Status_Bar(struct abuf *ab) {$/;"	f	typeref:typename:void	signature:(struct abuf * ab)
 Editor_Move_Cursor	fim.c	/^void Editor_Move_Cursor(int key) {$/;"	f	typeref:typename:void	signature:(int key)
 Editor_Open	fim.c	/^void Editor_Open(char *filename) {$/;"	f	typeref:typename:void	signature:(char * filename)
 Editor_Process_Keypress	fim.c	/^void Editor_Process_Keypress()$/;"	f	typeref:typename:void	signature:()
 Editor_Read_Key	fim.c	/^int Editor_Read_Key()$/;"	f	typeref:typename:int	signature:()
 Editor_Refresh_Screen	fim.c	/^void Editor_Refresh_Screen()$/;"	f	typeref:typename:void	signature:()
+Editor_Row_CxToRx	fim.c	/^int Editor_Row_CxToRx(erow *row, int cx) {$/;"	f	typeref:typename:int	signature:(erow * row,int cx)
+Editor_Scroll	fim.c	/^void Editor_Scroll() {$/;"	f	typeref:typename:void	signature:()
+Editor_Update_Row	fim.c	/^void Editor_Update_Row(erow *row) {$/;"	f	typeref:typename:void	signature:(erow * row)
 Enable_Raw_Mode	fim.c	/^void Enable_Raw_Mode()$/;"	f	typeref:typename:void	signature:()
 End	fim.c	/^void End(const char *s)$/;"	f	typeref:typename:void	signature:(const char * s)
+FIM_TAB_STOP	fim.c	/^#define FIM_TAB_STOP /;"	d	file:
 FIM_VERSION	fim.c	/^#define FIM_VERSION /;"	d	file:
+Fim Update Log	log/update_log.md	/^# Fim Update Log$/;"	c
 Fix_Raw_Mode	fim.c	/^void Fix_Raw_Mode()$/;"	f	typeref:typename:void	signature:()
 Get_Cursor_Position	fim.c	/^int Get_Cursor_Position(int *rows, int *cols)$/;"	f	typeref:typename:int	signature:(int * rows,int * cols)
 Get_Window_Size	fim.c	/^int Get_Window_Size(int *rows, int *cols)$/;"	f	typeref:typename:int	signature:(int * rows,int * cols)
@@ -48,6 +54,7 @@ abuf	fim.c	/^struct abuf{$/;"	s	file:
 b	fim.c	/^  char *b;$/;"	m	struct:abuf	typeref:typename:char *	file:	access:public
 buf_section	fim.c	/^#define buf_section /;"	d	file:
 chars	fim.c	/^  char *chars;$/;"	m	struct:erow	typeref:typename:char *	file:	access:public
+coloff	fim.c	/^  int coloff;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
 cx	fim.c	/^  int cx,cy;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
 cy	fim.c	/^  int cx,cy;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
 data_section	fim.c	/^#define data_section /;"	d	file:
@@ -64,7 +71,12 @@ len	fim.c	/^  int len;$/;"	m	struct:abuf	typeref:typename:int	file:	access:publi
 main	fim.c	/^int main(int argc, char *argv[])$/;"	f	typeref:typename:int	signature:(int argc,char * argv[])
 num_rows	fim.c	/^  int num_rows;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
 orig_termios	fim.c	/^  struct termios orig_termios;$/;"	m	struct:Editor_Config	typeref:struct:termios	file:	access:public
+output_section	fim.c	/^#define output_section /;"	d	file:
+render	fim.c	/^  char *render;$/;"	m	struct:erow	typeref:typename:char *	file:	access:public
 row	fim.c	/^  erow *row;$/;"	m	struct:Editor_Config	typeref:typename:erow *	file:	access:public
 row_section	fim.c	/^#define row_section /;"	d	file:
+rowoff	fim.c	/^  int rowoff;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
+rsize	fim.c	/^  int rsize;$/;"	m	struct:erow	typeref:typename:int	file:	access:public
+rx	fim.c	/^  int rx;$/;"	m	struct:Editor_Config	typeref:typename:int	file:	access:public
 size	fim.c	/^  int size;$/;"	m	struct:erow	typeref:typename:int	file:	access:public
 terminal_section	fim.c	/^#define terminal_section /;"	d	file:
