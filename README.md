@@ -8,6 +8,8 @@ Fim is a text editor that allows user to DIY it's highlight rule.
 
 FIM (ver 1.0) is a demo with function to read and write one file, which looks like a simple text editor.
 
+![1](./image/demo.png)
+
 
 ## Usage
 
